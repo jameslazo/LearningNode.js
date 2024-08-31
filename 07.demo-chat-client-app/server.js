@@ -11,6 +11,11 @@ app.use(express.static(__dirname));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 
+var Message = mongoose.model('Message', {
+    name: String,
+    message: String
+});
+
 var messages = [
     {name: 'Alice', message: 'Hi'},
     {name: 'Bob', message: 'Hello'}
