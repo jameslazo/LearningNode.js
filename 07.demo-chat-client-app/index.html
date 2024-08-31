@@ -25,6 +25,7 @@
 <script>
     $(() => {
         $("#send").click(() => {
+            var socket = io()
             var message = { name: $("#name").val(), message: $("#message").val()}
             postMessages(message)
         })
