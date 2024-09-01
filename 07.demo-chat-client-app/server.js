@@ -29,8 +29,18 @@ app.get('/messages', (req, res) => {
 
 app.post('/messages', (req, res) => {
     var message = new Message(req.body);
+    
     message.save()
         .then(() => {
+            console.log('saved');
+            return Message.findOne({message: 'bad word'});            
+        })
+
+        .then( censored => {
+            if(censored) {
+                console.log('censored words found', censored);
+                return Message.remove({_id: censored.id});
+            };
             io.emit('message', req.body);
             res.sendStatus(200);
         })
