@@ -4,6 +4,7 @@ var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var mongoose = require('mongoose');
+const { resolveSoa } = require('dns');
 require('dotenv').config();
 const uri = process.env.MONGODB_URI;
 
@@ -16,28 +17,35 @@ var Message = mongoose.model('Message', {
     message: String
 });
 
-var messages = [
-    {name: 'Alice', message: 'Hi'},
-    {name: 'Bob', message: 'Hello'}
-];
-
 app.get('/messages', (req, res) => {
-    res.send(messages);
+    Message.find({})
+        .then((messages)   => {
+            res.send(messages);
+        })
+        .catch((err) => {
+            res.status(500).send(err);
+        })
 });
 
 app.post('/messages', (req, res) => {
-    messages.push(req.body);
-    io.emit('message', req.body);
-    res.sendStatus(200);
+    var message = new Message(req.body);
+    message.save()
+        .then(() => {
+            io.emit('message', req.body);
+            res.sendStatus(200);
+        })
+
+        .catch((err) => {res.sendStatus(500)});
 });
 
 io.on('connection', (socket) => {
     console.log('a user connected')
 });
 
-mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true })
-    .then(() => console.log('Connected to MongoDB'))
-    .catch(err => console.error('Could not connect to MongoDB', err));
+mongoose.connect(uri, {
+    authSource: "admin",
+    ssl: true,
+});
 
 var server = http.listen(3000, () => {
     console.log('Server is listening on port:', server.address().port)
